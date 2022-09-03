@@ -1,11 +1,10 @@
 /* Standard Library */
 #include <stdio.h>
 
-/* Library Module */
-#include "../Library/standard_types.h"
-
 /* Card Module */
 #include "card.h"
+/* Terminal Module */
+#include "../Terminal/terminal.h"
 
 /*
  Name: getCardHolderName
@@ -80,8 +79,8 @@ EN_cardError_t getCardPAN(ST_cardData_t *cardData)
 	printf(" PAN:         ");
 	gets(cardData->primaryAccountNumber);
 
-	/* Check: No cardPAN or cardPAN < 16 or cardPAN > 19 */
-	if (cardData->primaryAccountNumber[0] == '\0' || cardData->primaryAccountNumber[15] == '\0' || cardData->primaryAccountNumber[19] != '\0')
+	/* Check: No cardPAN or cardPAN < 16 or cardPAN > 19 or cardPAN is not a Luhn number */
+	if (cardData->primaryAccountNumber[0] == '\0' || cardData->primaryAccountNumber[15] == '\0' || cardData->primaryAccountNumber[19] != '\0' || isValidCardPAN(cardData) == INVALID_CARD)
 	{
 		/* Update error state, Wrong PAN! */
 		Loc_ErrorState = WRONG_PAN;
