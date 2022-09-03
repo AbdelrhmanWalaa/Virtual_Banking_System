@@ -1,8 +1,6 @@
 /* Standard Library */
 #include <stdio.h>
-
-/* Library Module */
-#include "../Library/standard_types.h"
+#include <time.h>
 
 /* Card Module */
 #include "../Card/card.h"
@@ -22,10 +20,15 @@ EN_terminalError_t getTransactionDate(ST_terminalData_t *termData)
 {
 	/* Define local variable to set the error state, No Error */
 	EN_terminalError_t Loc_ErrorState = TERMINAL_OK;
+	
+	time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+
+	/* Get Date from system */
+	sprintf(termData->transactionDate, "%02d/%02d/%04d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
 
 	/* Get Transaction Date */
-	printf(" Transaction Date: ");
-	gets(termData->transactionDate);
+	printf(" Transaction Date: %s\n", termData->transactionDate);
 
 	/* Check: No transactionDate or transactionDate < 10 or transactionDate > 10 or transactionDate is not in the correct format (DD/MM/YYYY) */
 	if (termData->transactionDate[0] == '\0' || termData->transactionDate[9] == '\0' || termData->transactionDate[10] != '\0' || termData->transactionDate[2] != '/' || termData->transactionDate[5] != '/')
@@ -89,6 +92,61 @@ EN_terminalError_t isValidCardPAN(ST_cardData_t *cardData)
 {
 	/* Define local variable to set the error state, No Error */
 	EN_terminalError_t Loc_ErrorState = TERMINAL_OK;
+	/* Define local variables to check wether Number is Luhn or not  */
+	uint8_t Loc_Counter = 0, Loc_Sum = 0, Loc_Number;
+	uint8_t Loc_Index, Loc_IndexA, Loc_IndexB;
+	uint8_t Loc_reversedPAN[20];
+	
+	/* Loop: Until the end of string */
+	while(cardData->primaryAccountNumber[Loc_Counter] != '\0')
+	{
+		/* Increment Counter */
+		Loc_Counter++;		
+	}
+
+	Loc_IndexA = Loc_Counter - 1;
+
+	/* Loop: Until the PAN is reversed */
+	for(Loc_IndexB = 0; Loc_IndexB < Loc_Counter; Loc_IndexB++, Loc_IndexA--)
+	{
+		Loc_reversedPAN[Loc_IndexB] = cardData->primaryAccountNumber[Loc_IndexA];		
+	}
+
+	/* Loop: Until the end of reversed PAN */
+	for(Loc_Index = 0; Loc_Index < Loc_Counter; Loc_Index++)
+	{
+		Loc_Number = Loc_reversedPAN[Loc_Index] - '0';
+		
+		/* Check 1: Index is divisible by 2 */
+		if(Loc_Index % 2 == 0)
+		{
+			/* Increment Sum */
+			Loc_Sum += Loc_Number;
+		}
+		/* Check 2: Index is not divisible by 2 */
+		else
+		{
+			/* Multiply Number by 2 */
+			Loc_Number *= 2;
+
+			/* Check 2.1: Number > 9 */
+			if(Loc_Number > 9)
+			{
+				/* Add two digits of the Number */			
+				Loc_Number = (Loc_Number / 10) + (Loc_Number % 10);					
+			}
+
+			/* Increment Sum */
+			Loc_Sum += Loc_Number;
+		}
+	}
+
+	/* Check 3: Sum is not divisible by 10 */
+	if(Loc_Sum % 10 != 0)
+	{
+		/* Update error state, Invalid Card! */
+		Loc_ErrorState = INVALID_CARD;
+	}
 
 	return Loc_ErrorState;
 }
